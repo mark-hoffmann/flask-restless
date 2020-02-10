@@ -329,7 +329,7 @@ class APIManager(object):
                              max_results_per_page=100,
                              post_form_preprocessor=None, preprocessors=None,
                              postprocessors=None, primary_key=None,
-                             serializer=None, deserializer=None):
+                             serializer=None, deserializer=None, auth_decorator=None):
         """Creates and returns a ReSTful API interface as a blueprint, but does
         not register it on any :class:`flask.Flask` application.
 
@@ -584,13 +584,22 @@ class APIManager(object):
         for key, value in restlessinfo.universal_postprocessors.items():
             postprocessors_[key] = value + postprocessors_[key]
         # the view function for the API for this model
-        api_view = API.as_view(apiname, restlessinfo.session, model,
-                               exclude_columns, include_columns,
-                               include_methods, validation_exceptions,
-                               results_per_page, max_results_per_page,
-                               post_form_preprocessor, preprocessors_,
-                               postprocessors_, primary_key, serializer,
-                               deserializer)
+        if auth_decorator:
+            api_view = auth_decorator(API.as_view(apiname, restlessinfo.session, model,
+                                exclude_columns, include_columns,
+                                include_methods, validation_exceptions,
+                                results_per_page, max_results_per_page,
+                                post_form_preprocessor, preprocessors_,
+                                postprocessors_, primary_key, serializer,
+                                deserializer))
+        else:
+            api_view = API.as_view(apiname, restlessinfo.session, model,
+                                exclude_columns, include_columns,
+                                include_methods, validation_exceptions,
+                                results_per_page, max_results_per_page,
+                                post_form_preprocessor, preprocessors_,
+                                postprocessors_, primary_key, serializer,
+                                deserializer)
         # suffix an integer to apiname according to already existing blueprints
         blueprintname = APIManager._next_blueprint_name(app.blueprints,
                                                         apiname)
